@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="layout/basic">
+      layout:decorate="~{layout/basic}">
 
 <!--xmlns:th = 타임리프의 th 속성을 사용하기 위한 선언-->
 <!--xmlns:layout = 타임리프의 레이아웃 기능을 사용하기 위한 선언-->
 <!--xmlnslayout:decorate = 레이아웃으로 basic.html을 사용하겠다는 의미-->
 <!--boot가 2.6 미만 버전인 경우 layout:decorator로 선언-->
 
-<th:block layout:fragment="title">
+<head>
     <title>글작성 페이지</title>
-</th:block>
+</head>
 <th:block layout:fragment="content">
     <div class="page_tits">
         <h3>게시판 관리</h3>
@@ -57,7 +57,7 @@
             </form>
             <p class="btn_set">
                 <button type="button" id="saveBtn" onclick="savePost();" class="btns btn_st3 btn_mid">저장</button>
-                <a th:href="@{/post/list.do}" class="btns btn_bdr3 btn_mid">뒤로</a>
+                <a th:href="@{/board/list}" class="btns btn_bdr3 btn_mid">뒤로</a>
             </p>
         </section>
     </div> <!--/* .content */-->
@@ -65,18 +65,38 @@
 
 <th:block layout:fragment="script">
     <script th:inline="javascript">
+        /*<script> 태그에 th:inline 속성을 javascript로 선언해야 자바스크립트 내에서 타임리프 문법을 사용할 수 있음*/
         /*<![CDATA[*/
 
         window.onload = () => {
-            initCreatedDate();
+            //initCreatedDate();
+            renderPostInfo();
         }
 
+        // 게시글 상세정보 렌더링
+        function renderPostInfo() {
+            const post = [[ ${post} ]];
+
+            if ( !post ) {
+                initCreatedDate();
+                return false;
+            }
+
+            const form = document.getElementById('saveForm');
+            const fields = ['id', 'title', 'content', 'writer', 'noticeYn'];
+            form.isNotice.checked = post.noticeYn;
+            form.createdDate.value = dayjs(post.createdDate).format('YYYY-MM-DD HH:mm');
+
+            fields.forEach(field => {
+                form[field].value = post[field];
+            })
+        }
 
         // 등록일 초기화
         function initCreatedDate() {
             document.getElementById('createdDate').value = dayjs().format('YYYY-MM-DD');
         }
-
+        //body.html 하단의 script src="https://cdn.....dayjs.min.js 코드를 통해 dayjs 라이브러리를 import 해서 사용
 
         // 게시글 저장(수정)
         function savePost() {
@@ -90,7 +110,7 @@
 
             document.getElementById('saveBtn').disabled = true;
             form.noticeYn.value = form.isNotice.checked;
-            form.action = [[ ${post == null} ]] ? '/post/save.do' : '/post/update.do';
+            form.action = [[ ${post == null} ]] ? '/board/save' : '/board/update';
             form.submit();
         }
 
